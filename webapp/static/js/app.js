@@ -1,50 +1,55 @@
 /**
- * F-YOLO PestVision — Frontend Application
- * Handles image upload, API communication, and results rendering.
- * RAW images only — no client-side preprocessing.
+ * F-YOLO Hybrid PestVision — Frontend Application v2
+ * Renders CNN score, YOLO score, and Fuzzy severity independently per detection.
  */
 
 (function () {
     'use strict';
 
-    // ─── DOM Elements ─────────────────────────────────────────────────────
-
-    const headerStatus = document.getElementById('headerStatus');
-    const uploadZone = document.getElementById('uploadZone');
-    const uploadIcon = document.getElementById('uploadIcon');
-    const uploadLoading = document.getElementById('uploadLoading');
-    const fileInput = document.getElementById('fileInput');
-    const heroSection = document.getElementById('heroSection');
-    const uploadSection = document.getElementById('uploadSection');
-    const resultsSection = document.getElementById('resultsSection');
+    // ─── DOM Elements ──────────────────────────────────────────────────────────
+    const headerStatus    = document.getElementById('headerStatus');
+    const pipeCNN         = document.getElementById('pipeCNN');
+    const pipeYOLO        = document.getElementById('pipeYOLO');
+    const pipeFuzzy       = document.getElementById('pipeFuzzy');
+    const uploadZone      = document.getElementById('uploadZone');
+    const uploadLoading   = document.getElementById('uploadLoading');
+    const lsCNN           = document.getElementById('lsCNN');
+    const lsYOLO          = document.getElementById('lsYOLO');
+    const lsFuzzy         = document.getElementById('lsFuzzy');
+    const fileInput       = document.getElementById('fileInput');
+    const heroSection     = document.getElementById('heroSection');
+    const uploadSection   = document.getElementById('uploadSection');
+    const resultsSection  = document.getElementById('resultsSection');
     const categoriesSection = document.getElementById('categoriesSection');
 
-    // Results elements
     const totalDetections = document.getElementById('totalDetections');
-    const inferenceTime = document.getElementById('inferenceTime');
-    const imageSize = document.getElementById('imageSize');
-    const btnNewScan = document.getElementById('btnNewScan');
-    const originalImage = document.getElementById('originalImage');
-    const annotatedImage = document.getElementById('annotatedImage');
-    const panelFilename = document.getElementById('panelFilename');
-    const panelCount = document.getElementById('panelCount');
-    const detectionsGrid = document.getElementById('detectionsGrid');
-    const noDetections = document.getElementById('noDetections');
+    const inferenceTime   = document.getElementById('inferenceTime');
+    const imageSize       = document.getElementById('imageSize');
+    const btnNewScan      = document.getElementById('btnNewScan');
+    const originalImage   = document.getElementById('originalImage');
+    const annotatedImage  = document.getElementById('annotatedImage');
+    const panelFilename   = document.getElementById('panelFilename');
+    const panelCount      = document.getElementById('panelCount');
+    const detectionsGrid  = document.getElementById('detectionsGrid');
+    const noDetections    = document.getElementById('noDetections');
+    const cnnGlobalBanner = document.getElementById('cnnGlobalBanner');
+    const cnnGlobalResult = document.getElementById('cnnGlobalResult');
+    const cnnGlobalConf   = document.getElementById('cnnGlobalConf');
 
-    const API_BASE = '';
+    const API_BASE     = '';
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-    // ─── Health Check ─────────────────────────────────────────────────────
+    // ─── Health Check ──────────────────────────────────────────────────────────
 
     async function checkHealth() {
         try {
-            const res = await fetch(`${API_BASE}/api/health`);
+            const res  = await fetch(`${API_BASE}/api/health`);
             const data = await res.json();
 
             if (data.status === 'healthy' && data.model_loaded) {
                 if (data.custom_model) {
                     headerStatus.className = 'header-status online';
-                    headerStatus.querySelector('.status-text').textContent = 'Model Ready';
+                    headerStatus.querySelector('.status-text').textContent = 'Hybrid Ready';
                 } else {
                     headerStatus.className = 'header-status fallback';
                     headerStatus.querySelector('.status-text').textContent = 'Fallback Model';
@@ -53,53 +58,59 @@
                 headerStatus.className = 'header-status';
                 headerStatus.querySelector('.status-text').textContent = 'Model Error';
             }
+
+            // Update pipeline badges
+            if (data.cnn_loaded) {
+                pipeCNN.classList.add('active');
+                pipeCNN.title = 'CNN (MobileNetV2) — Loaded ✅';
+            } else {
+                pipeCNN.classList.remove('active');
+                pipeCNN.classList.add('unavail');
+                pipeCNN.title = 'CNN not loaded — train & place cnn_pest_model.h5';
+            }
+
+            if (data.model_loaded) {
+                pipeYOLO.classList.add('active');
+                pipeYOLO.title = `YOLOv8 — ${data.custom_model ? 'Custom ✅' : 'Fallback COCO'}`;
+            }
+
+            if (data.fuzzy_engine) {
+                pipeFuzzy.classList.add('active');
+                pipeFuzzy.title = 'Fuzzy Logic Engine — Ready ✅';
+            } else {
+                pipeFuzzy.classList.add('unavail');
+                pipeFuzzy.title = 'Fuzzy not ready — pip install scikit-fuzzy';
+            }
+
         } catch (e) {
             headerStatus.className = 'header-status';
             headerStatus.querySelector('.status-text').textContent = 'Offline';
         }
     }
 
-    // ─── Upload Handling ──────────────────────────────────────────────────
+    // ─── Upload Handling ───────────────────────────────────────────────────────
 
     function setupUpload() {
-        // Click to browse
         uploadZone.addEventListener('click', (e) => {
-            if (e.target === btnNewScan || btnNewScan.contains(e.target)) return;
+            if (btnNewScan && (e.target === btnNewScan || btnNewScan.contains(e.target))) return;
             fileInput.click();
         });
 
-        // Keyboard accessibility
         uploadZone.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                fileInput.click();
-            }
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
         });
 
-        // File selected
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) processFile(file);
         });
 
-        // Drag and drop
-        uploadZone.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('drag-over');
-        });
-
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('drag-over');
-        });
-
+        uploadZone.addEventListener('dragenter', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragover',  (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
         uploadZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            if (!uploadZone.contains(e.relatedTarget)) {
-                uploadZone.classList.remove('drag-over');
-            }
+            if (!uploadZone.contains(e.relatedTarget)) uploadZone.classList.remove('drag-over');
         });
-
         uploadZone.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadZone.classList.remove('drag-over');
@@ -107,30 +118,16 @@
             if (file) processFile(file);
         });
 
-        // New scan button
-        btnNewScan.addEventListener('click', (e) => {
-            e.stopPropagation();
-            resetView();
-        });
+        btnNewScan.addEventListener('click', (e) => { e.stopPropagation(); resetView(); });
     }
 
     function processFile(file) {
-        // Validate type
-        if (!file.type.startsWith('image/')) {
-            showError('Please upload an image file (JPEG, PNG, WebP).');
-            return;
-        }
-
-        // Validate size
-        if (file.size > MAX_FILE_SIZE) {
-            showError('File too large. Maximum size is 10MB.');
-            return;
-        }
-
+        if (!file.type.startsWith('image/')) { showError('Please upload an image file (JPEG, PNG, WebP).'); return; }
+        if (file.size > MAX_FILE_SIZE)        { showError('File too large. Maximum size is 10MB.');          return; }
         uploadImage(file);
     }
 
-    // ─── API Call ─────────────────────────────────────────────────────────
+    // ─── API Call ──────────────────────────────────────────────────────────────
 
     async function uploadImage(file) {
         showLoading(true);
@@ -139,10 +136,7 @@
         formData.append('file', file);
 
         try {
-            const res = await fetch(`${API_BASE}/api/detect`, {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await fetch(`${API_BASE}/api/detect`, { method: 'POST', body: formData });
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
@@ -150,7 +144,6 @@
             }
 
             const data = await res.json();
-
             if (data.success) {
                 renderResults(data, file.name);
             } else {
@@ -162,27 +155,35 @@
         }
     }
 
-    // ─── Render Results ───────────────────────────────────────────────────
+    // ─── Render Results ────────────────────────────────────────────────────────
 
     function renderResults(data, filename) {
         showLoading(false);
 
-        // Hide hero, show results
-        heroSection.style.display = 'none';
-        uploadSection.style.display = 'none';
+        heroSection.style.display      = 'none';
+        uploadSection.style.display    = 'none';
         categoriesSection.style.display = 'none';
         resultsSection.classList.remove('hidden');
 
-        // Summary
-        totalDetections.textContent = data.summary.total_detections;
-        inferenceTime.textContent = `${data.summary.inference_time_ms}ms`;
+        // Summary bar
         const [w, h] = data.summary.image_size;
-        imageSize.textContent = `${w}×${h}`;
-        panelFilename.textContent = truncateFilename(filename, 30);
-        panelCount.textContent = `${data.summary.total_detections} pest${data.summary.total_detections !== 1 ? 's' : ''}`;
+        totalDetections.textContent = data.summary.total_detections;
+        inferenceTime.textContent   = `${data.summary.inference_time_ms}ms`;
+        imageSize.textContent       = `${w}×${h}`;
+        panelFilename.textContent   = truncateFilename(filename, 30);
+        panelCount.textContent      = `${data.summary.total_detections} pest${data.summary.total_detections !== 1 ? 's' : ''}`;
+
+        // CNN Global Banner
+        if (data.summary.cnn_loaded && data.summary.cnn_top_class) {
+            cnnGlobalBanner.classList.remove('hidden');
+            cnnGlobalResult.textContent = data.summary.cnn_top_class;
+            cnnGlobalConf.textContent   = `${(data.summary.cnn_top_confidence * 100).toFixed(1)}%`;
+        } else {
+            cnnGlobalBanner.classList.add('hidden');
+        }
 
         // Images
-        originalImage.src = data.original_image;
+        originalImage.src  = data.original_image;
         annotatedImage.src = data.annotated_image;
 
         // Detection cards
@@ -194,13 +195,11 @@
         } else {
             noDetections.classList.add('hidden');
             detectionsGrid.style.display = '';
-
             data.detections.forEach((det, i) => {
-                const card = createDetectionCard(det, i);
-                detectionsGrid.appendChild(card);
+                detectionsGrid.appendChild(createDetectionCard(det, i));
             });
 
-            // Animate confidence bars after render
+            // Animate bars after render
             requestAnimationFrame(() => {
                 setTimeout(() => {
                     document.querySelectorAll('.det-bar-fill').forEach((bar) => {
@@ -210,67 +209,129 @@
             });
         }
 
-        // Scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    /**
+     * Creates a detection card showing all 3 model scores independently.
+     */
     function createDetectionCard(det, index) {
         const card = document.createElement('div');
-        card.className = 'detection-card';
+        card.className = 'detection-card hybrid-card';
         card.style.setProperty('--det-color', det.color);
         card.style.animationDelay = `${index * 0.08}s`;
 
-        const confidencePct = (det.confidence * 100).toFixed(1);
-        const bboxStr = det.bbox.map((v) => Math.round(v)).join(', ');
-        const severityClass = (det.severity || 'medium').toLowerCase();
+        const yoloPct      = ((det.yolo_conf  || 0) * 100).toFixed(1);
+        const cnnPct       = ((det.cnn_prob   || 0) * 100).toFixed(1);
+        const combinedPct  = ((det.combined_conf || det.confidence || 0) * 100).toFixed(1);
+        const fuzzyLabel   = det.fuzzy_severity || det.severity || 'N/A';
+        const fuzzyScore   = det.fuzzy_score != null ? det.fuzzy_score.toFixed(1) : '—';
+        const bboxStr      = det.bbox.map((v) => Math.round(v)).join(', ');
+        const severityClass = getSeverityClass(fuzzyLabel);
 
         card.innerHTML = `
+            <!-- Card Header -->
             <div class="det-header">
                 <div class="det-name">
                     <span class="det-icon">${det.icon || '🔍'}</span>
-                    <span class="det-label">${det.class_name}</span>
+                    <span class="det-label">${escapeHtml(det.class_name)}</span>
                 </div>
-                <span class="det-confidence-value">${confidencePct}%</span>
+                <span class="det-combined-badge" title="60% YOLO + 40% CNN combined score">${combinedPct}%</span>
             </div>
-            <div class="det-bar-track">
-                <div class="det-bar-fill" data-width="${confidencePct}%" style="width: 0%"></div>
+
+            <!-- 3 Model Score Rows -->
+            <div class="model-scores">
+
+                <!-- YOLO Score -->
+                <div class="ms-row" title="YOLOv8 detection confidence">
+                    <div class="ms-label">
+                        <span class="ms-dot yolo"></span>
+                        <span class="ms-name">YOLOv8</span>
+                    </div>
+                    <div class="ms-bar-track">
+                        <div class="det-bar-fill ms-bar yolo-bar" data-width="${yoloPct}%" style="width: 0%"></div>
+                    </div>
+                    <span class="ms-value">${yoloPct}%</span>
+                </div>
+
+                <!-- CNN Score -->
+                <div class="ms-row" title="MobileNetV2 classification probability">
+                    <div class="ms-label">
+                        <span class="ms-dot cnn"></span>
+                        <span class="ms-name">CNN</span>
+                    </div>
+                    <div class="ms-bar-track">
+                        <div class="det-bar-fill ms-bar cnn-bar" data-width="${cnnPct}%" style="width: 0%"></div>
+                    </div>
+                    <span class="ms-value">${cnnPct}%</span>
+                </div>
+
+                <!-- Fuzzy Severity -->
+                <div class="ms-row fuzzy-row" title="Fuzzy Logic severity score (0–100)">
+                    <div class="ms-label">
+                        <span class="ms-dot fuzzy"></span>
+                        <span class="ms-name">Fuzzy</span>
+                    </div>
+                    <div class="ms-bar-track">
+                        <div class="det-bar-fill ms-bar fuzzy-bar" data-width="${fuzzyScore}%" style="width: 0%"></div>
+                    </div>
+                    <span class="ms-value fuzzy-score-val">${fuzzyScore}/100</span>
+                </div>
             </div>
-            <div class="det-meta">
-                <span class="det-tag">bbox: [${bboxStr}]</span>
-                ${det.severity && det.severity !== 'N/A' ? `<span class="det-severity ${severityClass}">${det.severity}</span>` : ''}
+
+            <!-- Footer meta -->
+            <div class="det-footer">
+                <span class="det-tag" title="Bounding box coordinates">📍 [${bboxStr}]</span>
+                <span class="det-severity-badge ${severityClass}">${fuzzyLabel}</span>
             </div>
         `;
 
         return card;
     }
 
-    // ─── UI State Helpers ─────────────────────────────────────────────────
+    function getSeverityClass(label) {
+        if (!label) return 'medium';
+        const l = label.toLowerCase();
+        if (l.includes('high') || l.includes('critical')) return 'high';
+        if (l.includes('low'))                             return 'low';
+        return 'medium';
+    }
+
+    // ─── Loading Stages Animation ──────────────────────────────────────────────
+
+    let loadingTimer = null;
 
     function showLoading(show) {
         if (show) {
             uploadZone.classList.add('loading');
             uploadLoading.classList.remove('hidden');
+            // Animate through stages
+            [lsCNN, lsYOLO, lsFuzzy].forEach(el => el && el.classList.remove('ls-active', 'ls-done'));
+            let stage = 0;
+            const stages = [lsCNN, lsYOLO, lsFuzzy];
+            loadingTimer = setInterval(() => {
+                if (stage > 0 && stages[stage - 1]) stages[stage - 1].classList.replace('ls-active', 'ls-done');
+                if (stage < stages.length && stages[stage]) stages[stage].classList.add('ls-active');
+                stage++;
+                if (stage >= stages.length) clearInterval(loadingTimer);
+            }, 600);
         } else {
             uploadZone.classList.remove('loading');
             uploadLoading.classList.add('hidden');
+            if (loadingTimer) clearInterval(loadingTimer);
         }
     }
 
     function resetView() {
         resultsSection.classList.add('hidden');
-        heroSection.style.display = '';
-        uploadSection.style.display = '';
+        heroSection.style.display       = '';
+        uploadSection.style.display     = '';
         categoriesSection.style.display = '';
-
-        // Reset file input
         fileInput.value = '';
-
-        // Scroll to upload
         uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function showError(message) {
-        // Simple error — create a toast notification
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -278,16 +339,14 @@
             border-radius: 12px; font-size: 0.9rem; font-weight: 500;
             border: 1px solid rgba(239,68,68,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             z-index: 1000; display: flex; align-items: center; gap: 10px;
-            animation: fadeUp 0.3s ease;
-            font-family: 'Inter', sans-serif;
+            animation: fadeUp 0.3s ease; font-family: 'Inter', sans-serif;
         `;
         toast.innerHTML = `<span style="color:#ef4444;font-size:1.2rem;">⚠</span> ${escapeHtml(message)}`;
         document.body.appendChild(toast);
-
         setTimeout(() => {
-            toast.style.transition = 'opacity 0.3s, transform 0.3s';
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(-50%) translateY(10px)';
+            toast.style.transition  = 'opacity 0.3s, transform 0.3s';
+            toast.style.opacity     = '0';
+            toast.style.transform   = 'translateX(-50%) translateY(10px)';
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     }
@@ -304,16 +363,14 @@
         return div.innerHTML;
     }
 
-    // ─── Initialize ───────────────────────────────────────────────────────
+    // ─── Initialize ────────────────────────────────────────────────────────────
 
     function init() {
         setupUpload();
         checkHealth();
-        // Re-check health every 30s
         setInterval(checkHealth, 30000);
     }
 
-    // Start when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

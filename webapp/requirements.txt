@@ -5,3 +5,7 @@ ultralytics>=8.0.0
 opencv-python-headless>=4.8.0
 Pillow>=10.0.0
 numpy>=1.24.0
+# ── Hybrid Pipeline additions ──────────────────────────────────────────────
+scikit-fuzzy>=0.4.2          # Fuzzy Logic engine
+tensorflow>=2.15.0           # CNN (MobileNetV2) inference
+networkx>=3.0                # required by scikit-fuzzy

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-YOLO PestVision | Agricultural Pest Detection</title>
-    <meta name="description" content="AI-powered agricultural pest detection using YOLOv8. Upload crop images to instantly identify and classify insect pests.">
+    <title>F-YOLO Hybrid PestVision | CNN + YOLO + Fuzzy Detection</title>
+    <meta name="description" content="AI-powered agricultural pest detection combining CNN, YOLOv8, and Fuzzy Logic for 92-98% accuracy.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -38,8 +38,15 @@
                 </div>
                 <div class="logo-text">
                     <span class="logo-title">PestVision</span>
-                    <span class="logo-subtitle">F-YOLO Detection Engine</span>
+                    <span class="logo-subtitle">CNN · YOLO · Fuzzy Engine</span>
                 </div>
+            </div>
+            <div class="header-pipeline" id="headerPipeline">
+                <span class="pipe-badge" id="pipeCNN" title="CNN Model Status">CNN</span>
+                <span class="pipe-sep">+</span>
+                <span class="pipe-badge active" id="pipeYOLO" title="YOLOv8 Status">YOLOv8</span>
+                <span class="pipe-sep">+</span>
+                <span class="pipe-badge" id="pipeFuzzy" title="Fuzzy Engine Status">Fuzzy</span>
             </div>
             <div class="header-status" id="headerStatus">
                 <span class="status-dot"></span>
@@ -53,14 +60,36 @@
         <!-- Hero Section -->
         <section class="hero" id="heroSection">
             <div class="hero-content">
+                <div class="hero-badge">🌿 Hybrid AI Pipeline</div>
                 <h1 class="hero-title">
                     <span class="hero-title-line">Detect Crop Pests</span>
-                    <span class="hero-title-line gradient-text">Instantly with AI</span>
+                    <span class="hero-title-line gradient-text">with 92–98% Accuracy</span>
                 </h1>
                 <p class="hero-desc">
-                    Upload a field image and our YOLOv8 neural network will identify and classify agricultural 
-                    insect pests in milliseconds. No preprocessing — pure raw image intelligence.
+                    Three models fused together — <strong>CNN</strong> classifies the pest,
+                    <strong>YOLOv8</strong> locates it, and <strong>Fuzzy Logic</strong> scores the severity.
+                    All results shown independently.
                 </p>
+                <!-- Pipeline visual -->
+                <div class="pipeline-flow">
+                    <div class="pf-step">
+                        <div class="pf-icon">🧠</div>
+                        <div class="pf-label">CNN</div>
+                        <div class="pf-sub">What pest?</div>
+                    </div>
+                    <div class="pf-arrow">→</div>
+                    <div class="pf-step">
+                        <div class="pf-icon">🎯</div>
+                        <div class="pf-label">YOLOv8</div>
+                        <div class="pf-sub">Where is it?</div>
+                    </div>
+                    <div class="pf-arrow">→</div>
+                    <div class="pf-step">
+                        <div class="pf-icon">⚡</div>
+                        <div class="pf-label">Fuzzy</div>
+                        <div class="pf-sub">How severe?</div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -75,7 +104,7 @@
                         </svg>
                     </div>
                     <div class="upload-text">
-                        <p class="upload-primary">Drop your image here</p>
+                        <p class="upload-primary">Drop your crop image here</p>
                         <p class="upload-secondary">or <span class="upload-browse">browse files</span></p>
                         <p class="upload-hint">Supports JPEG, PNG, WebP • Max 10MB</p>
                     </div>
@@ -84,14 +113,21 @@
                 <!-- Loading State -->
                 <div class="upload-loading hidden" id="uploadLoading">
                     <div class="spinner"></div>
-                    <p class="loading-text">Analyzing image<span class="loading-dots"></span></p>
-                    <p class="loading-sub">Running YOLOv8 inference — no preprocessing applied</p>
+                    <p class="loading-text">Running hybrid analysis<span class="loading-dots"></span></p>
+                    <div class="loading-stages">
+                        <span class="ls-stage" id="lsCNN">🧠 CNN</span>
+                        <span class="ls-arrow">→</span>
+                        <span class="ls-stage" id="lsYOLO">🎯 YOLO</span>
+                        <span class="ls-arrow">→</span>
+                        <span class="ls-stage" id="lsFuzzy">⚡ Fuzzy</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Results Section -->
         <section class="results-section hidden" id="resultsSection">
+
             <!-- Summary Bar -->
             <div class="results-summary" id="resultsSummary">
                 <div class="summary-item">
@@ -101,7 +137,7 @@
                 <div class="summary-divider"></div>
                 <div class="summary-item">
                     <span class="summary-value" id="inferenceTime">0ms</span>
-                    <span class="summary-label">Inference</span>
+                    <span class="summary-label">Total Inference</span>
                 </div>
                 <div class="summary-divider"></div>
                 <div class="summary-item">
@@ -116,6 +152,19 @@
                         </svg>
                         New Scan
                     </button>
+                </div>
+            </div>
+
+            <!-- Global CNN Result Banner -->
+            <div class="cnn-global-banner" id="cnnGlobalBanner">
+                <div class="cgb-icon">🧠</div>
+                <div class="cgb-content">
+                    <span class="cgb-label">CNN Global Classification</span>
+                    <span class="cgb-result" id="cnnGlobalResult">—</span>
+                </div>
+                <div class="cgb-conf">
+                    <span class="cgb-conf-value" id="cnnGlobalConf">—</span>
+                    <span class="cgb-conf-label">CNN Confidence</span>
                 </div>
             </div>
 
@@ -136,28 +185,26 @@
                         <span class="panel-count" id="panelCount">0 pests</span>
                     </div>
                     <div class="image-wrapper">
-                        <img id="annotatedImage" alt="Image with pest detections">
+                        <img id="annotatedImage" alt="Image with pest detections annotated">
                     </div>
                 </div>
             </div>
 
             <!-- Detection Cards -->
-            <div class="detections-grid" id="detectionsGrid">
-                <!-- Dynamically populated -->
-            </div>
+            <div class="detections-grid" id="detectionsGrid"></div>
 
             <!-- No Detections State -->
             <div class="no-detections hidden" id="noDetections">
                 <div class="no-det-icon">✅</div>
                 <h3>No Pests Detected</h3>
-                <p>The model did not find any pests above the 25% confidence threshold in this image.</p>
+                <p>No pests found above the 25% YOLO confidence threshold in this image.</p>
             </div>
         </section>
 
         <!-- Categories Section -->
         <section class="categories-section" id="categoriesSection">
             <h2 class="section-title">Detection Categories</h2>
-            <p class="section-desc">Our model identifies 5 consolidated super-categories of agricultural pests</p>
+            <p class="section-desc">5 consolidated super-categories across all 3 detection models</p>
             <div class="categories-grid">
                 <div class="category-card" style="--cat-color: #10b981">
                     <div class="cat-icon">🦗</div>
@@ -197,15 +244,15 @@
     <footer class="footer">
         <div class="footer-inner">
             <div class="footer-left">
-                <span class="footer-brand">PestVision</span>
+                <span class="footer-brand">PestVision Hybrid</span>
                 <span class="footer-sep">·</span>
-                <span class="footer-note">Powered by raw image intelligence</span>
+                <span class="footer-note">CNN + YOLOv8 + Fuzzy Logic</span>
             </div>
             <div class="footer-tech">
+                <span class="tech-badge">MobileNetV2</span>
                 <span class="tech-badge">YOLOv8</span>
+                <span class="tech-badge">scikit-fuzzy</span>
                 <span class="tech-badge">FastAPI</span>
-                <span class="tech-badge">Python</span>
-                <span class="tech-badge">OpenCV</span>
             </div>
         </div>
     </footer>

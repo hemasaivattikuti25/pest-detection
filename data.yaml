@@ -1,25 +1,106 @@
-
 train: ../train/images
 val: ../valid/images
-
 nc: 102
-names: [
-'稻纵卷叶螟', '稻螟蛉', '稻潜叶蝇', '亚洲玉米螟', '三化螟',
-'稻瘿蚊', '稻秆蝇', '褐飞虱', '白背飞虱', '小褐飞虱',
-'稻水象甲', '稻叶蝉', '谷物蓟马', '稻苞虫', '蛴螬', '蝼蛄', '金针虫',
-'白边蛾', '小地老虎', '大地老虎', '黄地老虎', '红蜘蛛', '玉米螟', '夜蛾', '蚜虫',
-'白星花金龟', '桃蛀螟', '长角麦蚜', '麦二叉蚜', '禾谷缢管蚜', '麦红吸浆虫',
-'麦圆叶爪螨', '长腿蜘蛛螨', '麦管蓟马', '麦叶蜂', '麦黑斑潜叶蝇', '甜菜潜叶花蝇',
-'跳甲', ' 甘蓝夜蛾', '甜菜夜蛾', '甜菜斑蝇', '草地螟', '甜菜点腹象甲', '桑树金龟子',
-'苜蓿叶象甲', '苜蓿夜蛾', '苜蓿盲蝽', '牧草盲椿', '蝗虫', '西班牙绿芜菁/斑蝥', '豆斑蝥',
-'斑蝥', '苜蓿斑蚜', '牛角花齿蓟马', '蓟马/牧草虫', '苜蓿广肩小蜂', '东方菜粉蝶',
-'绿盲蝽', '刺蛾', '葡萄根瘤蚜', '葡萄瘿螨', '葡萄短须螨', '十星瓢萤叶甲',
-'侧多食跗线螨', '康氏粉蚧', '葡萄透翅蛾', '葡萄天蛾', '斑衣蜡蝉', '虎天牛',
-'大青叶蝉', '盲蝽', '温室白粉虱', '葡萄二星叶蝉', '柑橘凤蝶', '柑橘全爪螨',
-'柑橘锈螨', '吹绵蚧壳虫', '矢尖盾蚧', '红蜡蚧', '褐圆盾蚧',
-'黑点蚧', '堆蜡粉蚧', '柑橘刺粉蝨', '柑橘大实蝇', '柑橘小实蝇',
-'蜜柑大实蝇', '棉斜纹夜蛾', '枯叶夜蛾', '桔潜蛾姬小蜂', '橘蚜', '小桔蚜',
-'苹果绣线菊蚜', '芒果茶黄蓟马', '荔枝叶瘿蚊', '茶树白蛾蜡蝉', ' 青蛾蜡蝉',
-'芒果切叶象甲', '横线尾夜蛾', '芒果扁喙叶蝉', '脊胸天牛', '芒果果肉象甲', '叶蝉'
-]
-    
+names:
+- Rice leaf roller
+- rice borer
+- rice leafminer
+- Asian corn borer
+- Trichosanthes borer
+- rice gall midge
+- rice straw fly
+- brown planthopper
+- White-backed planthopper
+- small brown planthopper
+- Rice weevil
+- rice leafhopper
+- cereal thrips
+- rice bractworm
+- grub
+- mole cricket
+- wireworm
+- White-sided moth
+- Little cutworm
+- cutworm
+- yellow cutworm
+- Starscream
+- corn borer
+- noctua
+- aphid
+- white star beetle
+- Peach borer
+- Longhorned wheat aphid
+- wheat aphid
+- Grain constrictor aphid
+- Wheat midge
+- Wheat round claw mite
+- long-legged spider mite
+- Straw thrips
+- Wheat Leaf Bee
+- black-spotted leafminer
+- Beet leaf miner
+- flea armor
+- cabbage armyworm
+- beet armyworm
+- beet fly
+- meadow borer
+- Beet weevil
+- Mulberry chafer
+- Alfalfa leaf weevil
+- Alfalfa Spodoptera
+- Alfalfa bug
+- Grass blind stink bug
+- locust
+- Spanish Green Turnip/Cantharis
+- Cantharis cantoralis
+- Cantharides
+- Alfalfa spotted aphid
+- horn-toothed thrips
+- Thrips/weed bugs
+- Alfalfa broad-shouldered wasp
+- Oriental cabbage white butterfly
+- Green bug
+- thorn moth
+- Grape phylloxera
+- Grape gall mite
+- Grape brevibeard mite
+- Ten-star caladium firefly beetle
+- Polyphagous tarsalis mite
+- Mealybug Kang's
+- Grapewing moth
+- grape hawkmoth
+- Spotted wax cicada
+- tiger beetle
+- Big green leafhopper
+- Lygus bug
+- Greenhouse whitefly
+- Grape two-star leafhopper
+- Citrus Papilio
+- Panonychus citrus mite
+- Citrus rust mite
+- scale insect
+- Scutellaria spp.
+- red wax scale
+- brown buckler scale
+- black-spotted scale
+- wax mealybug
+- Citrus spiny whitefly
+- Citrus fruit fly
+- Citrus fruit fly
+- Satsuma fruit fly
+- Spodoptera exigua
+- Spodoptera exigua
+- Orangeminer wasp
+- orange aphid
+- Little orange aphid
+- Apple spirea aphid
+- Mango thrips
+- Lychee leaf gall midge
+- Tea tree white moth wax cicada
+- green moth wax cicada
+- Mango leaf weevil
+- Spodoptera exigua
+- Mango leafhopper
+- Chiropod beetles
+- Mango Pulp Weevil
+- leafhopper

@@ -1,122 +1,116 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="YOLOv8 Banner" width="100%">
   
-  # 🌿 F-YOLO PestVision
+  # 🌿 F-YOLO Hybrid PestVision
   
-  **An applied AI engineering pipeline for high-precision agricultural pest detection utilizing YOLOv8n, deployed as a full-stack, real-time web application.**
+  **A 3-Stage AI Pipeline (CNN + YOLO + Fuzzy) for High-Precision Agricultural Pest Detection & Severity Analysis.**
   
   [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg?logo=python&logoColor=white)](https://python.org)
   [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-FF9D00.svg?logo=ultralytics&logoColor=black)](https://ultralytics.com)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.0%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+  [![Apple M3 Optimized](https://img.shields.io/badge/M3-MPS_Accelerated-silver.svg?logo=apple&logoColor=white)]()
 </div>
 
 <br>
 
 ## 📖 Overview
 
-Agricultural pest detection suffers from severe class imbalance and extreme natural camouflage. **F-YOLO PestVision** addresses these computer vision challenges by engineering a consolidated, statistically viable dataset and deploying an optimized YOLOv8 Nano architecture. 
+**F-YOLO Hybrid PestVision** is a multi-model computer vision pipeline designed to solve the challenges of agricultural pest monitoring: extreme natural camouflage and severe class imbalance. 
 
-The resulting model is packaged into a highly responsive, glassmorphism-themed frontend backed by a robust asynchronous FastAPI architecture—enabling inference on raw field crop images in milliseconds.
+Unlike standard detection models, Hybrid PestVision utilizes a **3-Stage Fusion Architecture** to ensure that detections are not just located, but also classified and analyzed for structural impact on the crop.
 
 ---
 
-## 🔬 Data Engineering & Pipeline Strategy
+## 🔬 3-Stage Hybrid Architecture
 
-The original raw dataset consisted of ~19,000 images representing 102 highly imbalanced, fragmented insect categories. Attempting to train a 102-class model resulted in mediocre precision due to the long-tail distribution of rare pests.
+The system fuses three distinct AI methodologies into a single inference response:
 
-### 1. Class Consolidation Strategy
-Through aggressive mapping and label translation, the 102 fragmented classes were consolidated into **5 dense, high-frequency super-categories**, ensuring deep statistical viability and dramatic improvements in `mAP@0.5`:
+### 1. Stage 1: CNN Global classification (MobileNetV2)
+Acts as a "Global Validator." A fine-tuned MobileNetV2 classifies the entire frame or crops to provide a secondary probability layer, ensuring that YOLO's bounding boxes align with the overall visual context of the pest species.
 
-| ID | Super-Category | Keywords / Species Included | Severity |
+### 2. Stage 2: YOLOv8 Localization
+A YOLOv8 Nano model specialized in locating small, camouflaged pests. It provides high-speed spatial coordinates and local confidence scores for every detected insect in the field.
+
+### 3. Stage 3: Fuzzy Logic Severity Engine
+Detections are fed into a **Mamdani-style Fuzzy Logic System**. By analyzing the intersection of YOLO confidence, CNN probability, and Bounding Box area, the engine calculates an "Intelligent Severity Score" (0–100) to help farmers prioritize their response.
+
+---
+
+## 📊 Data Engineering: 102 → 5 Consolidated Classes
+
+To maximize precision, the original 102 fragmented insect categories were mapped into **5 consolidated super-categories** with high statistical density:
+
+| ID | Super-Category | Species Included | Severity |
 |:---:|:---|:---|:---:|
-| `0` | **Hopper_Cicada** | Leafhoppers, Planthoppers, Cicadas, Lygus bugs | 🔴 High |
+| `0` | **Hopper_Cicada** | Leafhoppers, Planthoppers, Cicadas | 🟠 High |
 | `1` | **Aphid** | Aphids | 🟡 Mid |
-| `2` | **Borer** | Borers (stem, fruit) | 🚨 Crit |
-| `3` | **Worm_Caterpillar**| Worms, Grubs, Spodoptera, Moths, Cutworms | 🔴 High |
-| `4` | **Beetle_Weevil** | Beetles, Weevils, Cantharis, Chafer, Flea | 🟡 Mid |
-
-*(Note: 47 statistically insignificant classes were dropped entirely to prevent model confusion.)*
-
-### 2. Empirical Lessons: Bypassing Fuzzy Preprocessing
-Early trials experimented with Zadeh’s Fuzzy Intensification Operator to enhance image contrast. Empirical testing proved that mathematical static thresholds destroyed the natural ridges, shadows, and edge textures of bright pests (like white grubs), resulting in flat graphical blobs.
-
-> **Crucial Architecture Decision:** F-YOLO PestVision relies strictly on **RAW image pixels**. We trust the Deep Convolutional Neural Network (CNN) to extract its own high-dimensional feature maps natively without destructive mathematical interference.
-
-### 3. YOLOv8 Training Optimization
-* **Model:** YOLOv8 Nano (`yolov8n.pt`)
-* **Resolution:** 640px (downscaling to 320px previously caused catastrophic feature starvation)
-* **Epochs:** 100
-* **Patience:** 20 (Early stopping)
-* **Backbone:** Unfrozen (locking base feature extractors degraded confidence to 15-20%)
+| `2` | **Borer** | Stem Borers, Fruit Borers | 🚨 Crit |
+| `3` | **Worm_Caterpillar**| Armyworms, Grubs, Spodoptera, Moths | 🔴 High |
+| `4` | **Beetle_Weevil** | Beetles, Weevils, Cantharis | 🟡 Mid |
 
 ---
 
-## 💻 Full-Stack Web Application
+## 🚀 Local Training & Monitoring
 
-The F-YOLO pipeline is paired with a production-grade inference server.
+This repository includes a full local training suite optimized for **Apple Silicon (M3)** utilizing MPS acceleration.
 
-### Tech Stack
-* **Backend:** FastAPI (Python), Uvicorn, OpenCV headless, Ultralytics
-* **Frontend:** Vanilla JavaScript, HTML5 Canvas, modern CSS3 (Glassmorphism layout, dynamic animations)
-* **Design System:** Custom Dark UI with Emerald Green (`#10b981`) agricultural accents, animated confidence scales, and drag-and-drop file ingestion.
+### 1. Training Pipeline
+Run the consolidated training script to build the CNN crops, fine-tune MobileNetV2, and train YOLOv8n sequentially:
+```bash
+python3 train_local.py
+```
 
-### API Architecture
-* `/api/detect` `[POST]`: Accepts a raw image, runs YOLOv8 batched inference at a custom 0.25 confidence threshold, and returns bounding boxes, normalized coordinates, severity levels, and base64 encoded annotated images asynchronously.
-* `/api/health` `[GET]`: Monitors model initialization, cold-start states, and fallback status.
+### 2. Live Training Monitor
+In a separate terminal, watch your training progress (epochs, mAP, model saves) with the live dashboard:
+```bash
+python3 monitor_training.py
+```
 
 ---
 
-## 🚀 Installation & Local Deployment
+## 💻 Deployment: Full-Stack Web App
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/hemasaivattikuti25/pest-detection.git
-cd pest-detection/webapp
-```
+The pipeline is packaged into a premium web interface featuring:
+* **Glassmorphism Design:** A modern, dark-themed UI for field operators.
+* **3-Model Visualization:** View independent scores for CNN, YOLO, and Fuzzy logic per detection.
+* **FastAPI Backend:** Asynchronous inference handling for real-time performance.
 
-### 2. Install Dependencies
-Ensure you have Python 3.9+ installed natively.
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Load Trained Weights
-Due to size limits, `.pt` weights are excluded from Git. Ensure you move your heavily-trained Colab weights here:
-```bash
-mv /path/to/your/trained/best.pt ./models/best.pt
-```
-*(If `best.pt` is missing, the backend will gracefully fallback to the pretrained COCO `yolov8n.pt` for general bounding box UI testing).*
-
-### 4. Ignite the FastAPI Server
-```bash
-bash start.sh
-# Or manually: uvicorn main:app --host 0.0.0.0 --port 8000
-```
-Visit `http://localhost:8000` in your browser.
+### Setup Instructions
+1. **Clone & Enter:**
+   ```bash
+   cd pest-detection/webapp
+   ```
+2. **Install:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Weights:** Place `best.pt` (YOLO) and `cnn_pest_model.h5` (CNN) in `webapp/models/`.
+4. **Launch:**
+   ```bash
+   bash start.sh
+   ```
 
 ---
 
 ## 📜 Repository Structure
 ```text
 .
-├── .gitignore
-├── Untitled0.ipynb                 # Original Data Science & Training Notebook
-├── data.yaml                       # YOLO dataset config (102 classes)
+├── train_local.py             # Integrated training pipeline (CNN + YOLO)
+├── monitor_training.py       # Live training terminal dashboard
+├── data.yaml                 # Original 102-class dataset config
+├── data_balanced.yaml        # Consolidated 5-class config (autogenerated)
 └── webapp/
-    ├── main.py                     # FastAPI Async Backend Server
-    ├── requirements.txt            # Dependency graph
-    ├── start.sh                    # Deployment initializer
+    ├── main.py               # FastAPI 3-Stage Hybrid Backend
+    ├── requirements.txt      # Dependency graph
     ├── models/
-    │   └── best.pt                 # <--- DROP CUSTOM WEIGHTS HERE
+    │   ├── best.pt           # YOLOv8 Weights
+    │   └── cnn_pest_model.h5 # CNN Weights
     └── static/
-        ├── index.html              # F-YOLO Single Page App (SPA)
-        ├── css/style.css           # Premium dark-theme variables & glassmorphism
-        └── js/app.js               # Async fetch logic & Canvas rendering
+        ├── index.html        # Premium Glassmorphism Frontend
+        ├── css/style.css     # Visual styling & animations
+        └── js/app.js         # Hybrid inference orchestration
 ```
 
----
-
 <div align="center">
-  <b>Designed for modern agricultural innovation. 🚜</b>
+  <b>Bridging Computer Vision and Agricultural Science. 🚜</b>
 </div>

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="YOLOv8 Banner" width="100%">
+  <img src="./images/banner.png" alt="F-YOLO Hybrid PestVision Banner" width="100%">
   
   # 🌿 F-YOLO Hybrid PestVision
   
